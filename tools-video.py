@@ -172,62 +172,50 @@ if st.button("🚀 Cari Video B-Roll"):
 
             st.subheader("🎥 Hasil YouTube")
 
-            for keyword in keywords:
+copy_text = "KEYWORDS:\n"
+copy_text += ", ".join(keywords) + "\n\n"
+copy_text += "YOUTUBE RESULTS:\n\n"
 
-                st.markdown(f"### 📌 {keyword}")
+for keyword in keywords:
 
-                videos = search_youtube(keyword)
+    st.markdown(f"### 📌 {keyword}")
 
-                if not videos:
+    copy_text += f"📌 {keyword}\n"
 
-                    st.warning("Tidak ada hasil.")
+    videos = search_youtube(keyword)
 
-                    continue
+    if not videos:
+        st.warning("Tidak ada hasil.")
+        copy_text += "Tidak ada hasil.\n\n"
+        continue
 
-                for item in videos:
+    for item in videos:
 
-                    try:
+        try:
+            video_id = item["id"]["videoId"]
+            title = item["snippet"]["title"]
 
-                        video_id = item["id"]["videoId"]
+            link = (
+                f"https://www.youtube.com/watch?v={video_id}"
+            )
 
-                        title = item["snippet"]["title"]
+            st.markdown(
+                f"- [{title}]({link})"
+            )
 
-                        link = (
-                            f"https://www.youtube.com/watch?v={video_id}"
-                        )
+            copy_text += (
+                f"- {title}\n"
+                f"{link}\n\n"
+            )
 
-                        st.markdown(
-                            f"- [{title}]({link})"
-                        )
+        except:
+            pass
 
-                    except:
 
-                        pass
+st.subheader("📋 Copy All Results")
 
-				copy_text = "KEYWORDS:\n"
-				copy_text += ", ".join(keywords) + "\n\n"
-				copy_text += "YOUTUBE RESULTS:\n\n"
-
-				for keyword in keywords:
-				copy_text += f"📌 {keyword}\n"
-
-				videos = search_youtube(keyword)
-
-				for item in videos:
-    			try:
-        			video_id = item["id"]["videoId"]
-        			title = item["snippet"]["title"]
-        			link = f"https://www.youtube.com/watch?v={video_id}"
-
-        			copy_text += f"- {title}\n{link}\n\n"
-
-    				except:
-        				pass
-
-				st.subheader("📋 Copy All Results")
-
-				st.text_area(
-					"Copy semua hasil di bawah:",
-					value=copy_text,
-					height=300
-					)
+st.text_area(
+    "Copy semua hasil di bawah:",
+    value=copy_text,
+    height=300
+)
