@@ -39,7 +39,7 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
             keywords = [k.strip() for k in ai_text.split(',')]
             st.success(f"✅ **AI Keyword:** {', '.join(keywords)}")
         except Exception as e:
-            st.error(f"AI Lagi Hang, pakai keyword cadangan otomatis.")
+            st.error(f"⚠️ Terjadi gangguan koneksi pada engine AI: {e}")
             keywords = []
 
     if keywords:
