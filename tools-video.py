@@ -104,8 +104,8 @@ Transcript:
         return keywords
 
     except Exception as e:
-        st.error(f"Gemini Error: {e}")
-        return []
+    st.error("Gemini API sedang sibuk atau mencapai limit.")
+    return []
 
 # =====================================================
 # YOUTUBE SEARCH
