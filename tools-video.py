@@ -259,8 +259,4 @@ if st.button("🚀 Cari Video B-Roll"):
                 "📋 Copy All Results"
             )
 
-            st.text_area(
-                "Copy semua hasil di bawah:",
-                value=copy_text,
-                height=300
-            )
+            st.code(copy_text)
