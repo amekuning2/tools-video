@@ -40,7 +40,7 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
             st.success(f"✅ **AI Keyword:** {', '.join(keywords)}")
         except Exception as e:
             st.error(f"AI Lagi Hang, pakai keyword cadangan otomatis.")
-            keywords = ["Disneyland custom headband", "Disneyland embroidery shop", "Disneyland cast member"]
+            keywords = []
 
     if keywords:
         st.subheader("🔍 Hasil B-Roll YouTube Shorts Teratas:")
