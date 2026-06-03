@@ -75,7 +75,10 @@ Transcript:
             timeout=30
         )
 
-        response.raise_for_status()
+        if response.status_code != 200:
+            st.error("Gemini Raw Response:")
+            st.code(response.text)
+            return []
 
         data = response.json()
 
