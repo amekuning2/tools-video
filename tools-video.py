@@ -154,68 +154,113 @@ if st.button("🚀 Cari Video B-Roll"):
 
     if not transcript.strip():
 
-        st.warning("Masukkan transcript terlebih dahulu.")
+        st.warning(
+            "Masukkan transcript terlebih dahulu."
+        )
 
     else:
 
-        keywords = generate_keywords(transcript)
+        keywords = generate_keywords(
+            transcript
+        )
 
         if not keywords:
 
-            st.error("Keyword gagal dibuat.")
+            st.error(
+                "Keyword gagal dibuat."
+            )
 
         else:
 
             st.success(
-                "Keyword: " + ", ".join(keywords)
+                "Keyword: " + ", ".join(
+                    keywords
+                )
             )
 
-            st.subheader("🎥 Hasil YouTube")
-
-copy_text = "KEYWORDS:\n"
-copy_text += ", ".join(keywords) + "\n\n"
-copy_text += "YOUTUBE RESULTS:\n\n"
-
-for keyword in keywords:
-
-    st.markdown(f"### 📌 {keyword}")
-
-    copy_text += f"📌 {keyword}\n"
-
-    videos = search_youtube(keyword)
-
-    if not videos:
-        st.warning("Tidak ada hasil.")
-        copy_text += "Tidak ada hasil.\n\n"
-        continue
-
-    for item in videos:
-
-        try:
-            video_id = item["id"]["videoId"]
-            title = item["snippet"]["title"]
-
-            link = (
-                f"https://www.youtube.com/watch?v={video_id}"
+            st.subheader(
+                "🎥 Hasil YouTube"
             )
 
-            st.markdown(
-                f"- [{title}]({link})"
+            copy_text = (
+                "KEYWORDS:\n"
             )
 
             copy_text += (
-                f"- {title}\n"
-                f"{link}\n\n"
+                ", ".join(keywords)
+                + "\n\n"
             )
 
-        except:
-            pass
+            copy_text += (
+                "YOUTUBE RESULTS:\n\n"
+            )
 
+            for keyword in keywords:
 
-st.subheader("📋 Copy All Results")
+                st.markdown(
+                    f"### 📌 {keyword}"
+                )
 
-st.text_area(
-    "Copy semua hasil di bawah:",
-    value=copy_text,
-    height=300
-)
+                copy_text += (
+                    f"📌 {keyword}\n"
+                )
+
+                videos = (
+                    search_youtube(
+                        keyword
+                    )
+                )
+
+                if not videos:
+
+                    st.warning(
+                        "Tidak ada hasil."
+                    )
+
+                    copy_text += (
+                        "Tidak ada hasil.\n\n"
+                    )
+
+                    continue
+
+                for item in videos:
+
+                    try:
+
+                        video_id = (
+                            item["id"][
+                                "videoId"
+                            ]
+                        )
+
+                        title = (
+                            item[
+                                "snippet"
+                            ]["title"]
+                        )
+
+                        link = (
+                            f"https://www.youtube.com/watch?v={video_id}"
+                        )
+
+                        st.markdown(
+                            f"- [{title}]({link})"
+                        )
+
+                        copy_text += (
+                            f"- {title}\n"
+                            f"{link}\n\n"
+                        )
+
+                    except:
+                        pass
+
+            st.subheader(
+                "📋 Copy All Results"
+            )
+
+            st.text_area(
+                "Copy semua hasil di bawah:",
+                value=copy_text,
+                height=300
+            )
