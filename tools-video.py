@@ -203,31 +203,3 @@ if st.button("🚀 Cari Video B-Roll"):
                     except:
 
                         pass
-
-copy_text = "KEYWORDS:\n"
-copy_text += ", ".join(keywords) + "\n\n"
-copy_text += "YOUTUBE RESULTS:\n\n"
-
-for keyword in keywords:
-    copy_text += f"📌 {keyword}\n"
-
-    videos = search_youtube(keyword)
-
-    for item in videos:
-        try:
-            video_id = item["id"]["videoId"]
-            title = item["snippet"]["title"]
-            link = f"https://www.youtube.com/watch?v={video_id}"
-
-            copy_text += f"- {title}\n{link}\n\n"
-
-        except:
-            pass
-
-st.subheader("📋 Copy All Results")
-
-st.text_area(
-    "Copy semua hasil di bawah:",
-    value=copy_text,
-    height=300
-) 
