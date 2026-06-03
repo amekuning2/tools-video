@@ -37,10 +37,19 @@ transcript = st.text_area(
 def generate_keywords(text):
 
     prompt = f"""
-Generate EXACTLY 3 YouTube Shorts search keywords.
+Generate EXACTLY 6 Disney-specific search keywords.
 
 Rules:
 - English only
+- Focus on Disney Parks
+- Prioritize attraction names
+- Prioritize land names
+- Prioritize show names
+- Prioritize restaurant names
+- Prioritize character names
+- Prioritize Disney park locations
+- Avoid generic keywords
+- Good for finding B-roll footage
 - comma separated
 - no numbering
 - no explanation
