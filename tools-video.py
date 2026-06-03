@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from typing import List
 
 # =====================================================
 # CONFIG
@@ -12,14 +11,9 @@ st.set_page_config(
     layout="centered"
 )
 
-OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-MODEL = "google/gemini-2.5-flash"
-
-MAX_RESULTS_PER_KEYWORD = 3
 REQUEST_TIMEOUT = 30
 
 # =====================================================
@@ -29,14 +23,13 @@ REQUEST_TIMEOUT = 30
 st.title("🎬 Disney Shorts B-Roll Finder")
 st.caption("AI-powered Disney B-Roll keyword generator")
 
-st.markdown(
-    """
+st.markdown("""
 Paste transcript video Shorts, lalu AI akan:
-1. Generate keyword B-Roll paling relevan  
-2. Cari video YouTube Shorts terkait  
+
+1. Generate keyword B-Roll paling relevan
+2. Cari video YouTube Shorts terkait
 3. Menampilkan hasil terbaik
-"""
-)
+""")
 
 transcript_input = st.text_area(
     "📜 Tempel Transkrip Video",
@@ -45,45 +38,51 @@ transcript_input = st.text_area(
 )
 
 # =====================================================
-# FUNCTIONS
+# GEMINI
 # =====================================================
 
-def generate_keywords(transcript: str) -> List[str]:
+def generate_keywords(transcript):
 
     prompt = f"""
-You are a Disney Shorts B-Roll keyword expert.
+You are a Disney Shorts B-Roll expert.
 
-Based on this transcript, generate EXACTLY 3 highly specific YouTube Shorts search keywords in English.
+Generate EXACTLY 3 highly specific YouTube Shorts search keywords.
 
 Rules:
+- English only
 - highly visual
-- cinematic b-roll friendly
-- Disney parks / attractions / ambience / food / guests / rides if relevant
-- avoid generic words
-- no explanation
-- no numbering
+- cinematic
+- Disney park related if applicable
 - comma separated only
+- no numbering
+- no explanation
 
 Transcript:
 {transcript}
 """
 
     try:
+
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+        )
+
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
+        }
+
         response = requests.post(
-            OPENROUTER_URL,
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": MODEL,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            },
+            url,
+            json=payload,
             timeout=REQUEST_TIMEOUT
         )
 
@@ -91,34 +90,28 @@ Transcript:
 
         data = response.json()
 
-        if "choices" not in data:
-            st.error("❌ OpenRouter response invalid")
-            with st.expander("Debug Response"):
-                st.json(data)
-            return []
+        ai_text = (
+            data["candidates"][0]
+            ["content"]["parts"][0]["text"]
+        )
 
-        ai_text = data["choices"][0]["message"]["content"]
-
-        keywords = []
-
-        for item in ai_text.split(","):
-            cleaned = item.strip()
-
-            if cleaned and cleaned not in keywords:
-                keywords.append(cleaned)
+        keywords = [
+            x.strip()
+            for x in ai_text.split(",")
+            if x.strip()
+        ]
 
         return keywords
 
-    except requests.exceptions.Timeout:
-        st.error("⌛ Request timeout ke OpenRouter")
-        return []
-
     except Exception as e:
-        st.error(f"❌ OpenRouter Error: {str(e)}")
+        st.error(f"Gemini Error: {e}")
         return []
 
+# =====================================================
+# YOUTUBE SEARCH
+# =====================================================
 
-def search_youtube(keyword: str):
+def search_youtube(keyword):
 
     url = "https://www.googleapis.com/youtube/v3/search"
 
@@ -127,11 +120,12 @@ def search_youtube(keyword: str):
         "q": f"{keyword} shorts",
         "type": "video",
         "videoDuration": "short",
-        "maxResults": MAX_RESULTS_PER_KEYWORD,
+        "maxResults": 3,
         "key": YOUTUBE_API_KEY
     }
 
     try:
+
         response = requests.get(
             url,
             params=params,
@@ -140,23 +134,20 @@ def search_youtube(keyword: str):
 
         response.raise_for_status()
 
-        data = response.json()
-
-        return data.get("items", [])
+        return response.json().get("items", [])
 
     except Exception as e:
-        st.warning(f"⚠️ YouTube Error ({keyword})")
+        st.warning(f"YouTube Error: {e}")
         return []
 
-
 # =====================================================
-# BUTTON ACTION
+# BUTTON
 # =====================================================
 
 if st.button("🚀 Cari Video B-Roll", type="primary"):
 
     if not transcript_input.strip():
-        st.warning("⚠️ Tempel transkrip dulu.")
+        st.warning("Tempel transcript dulu.")
         st.stop()
 
     with st.spinner("🧠 AI sedang menganalisis transcript..."):
@@ -164,12 +155,12 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
         keywords = generate_keywords(transcript_input)
 
     if not keywords:
-        st.error("❌ Keyword gagal dibuat.")
+        st.error("Keyword gagal dibuat.")
         st.stop()
 
     st.success(
-        "✅ Keyword ditemukan:\n\n"
-        + " • ".join(keywords)
+        "✅ Keyword ditemukan: "
+        + ", ".join(keywords)
     )
 
     st.divider()
@@ -183,48 +174,48 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
         videos = search_youtube(keyword)
 
         if not videos:
-            st.warning(f"Tidak ada hasil untuk: {keyword}")
+            st.warning(f"Tidak ada hasil untuk {keyword}")
             continue
 
         for item in videos:
 
             try:
-                video_id = item["id"]["videoId"]
-                snippet = item["snippet"]
 
-                title = snippet["title"]
-                channel = snippet["channelTitle"]
-                thumbnail = snippet["thumbnails"]["high"]["url"]
+                video_id = item["id"]["videoId"]
+
+                title = item["snippet"]["title"]
+
+                channel = item["snippet"]["channelTitle"]
+
+                thumbnail = item["snippet"]["thumbnails"]["high"]["url"]
 
                 youtube_link = (
                     f"https://www.youtube.com/shorts/{video_id}"
                 )
 
-                with st.container():
+                col1, col2 = st.columns([1, 2])
 
-                    col1, col2 = st.columns([1, 2])
+                with col1:
+                    st.image(
+                        thumbnail,
+                        use_container_width=True
+                    )
 
-                    with col1:
-                        st.image(
-                            thumbnail,
-                            use_container_width=True
-                        )
+                with col2:
+                    st.markdown(
+                        f"### [{title}]({youtube_link})"
+                    )
 
-                    with col2:
-                        st.markdown(
-                            f"### [{title}]({youtube_link})"
-                        )
-                        st.caption(
-                            f"📺 {channel}"
-                        )
-                        st.link_button(
-                            "Open Shorts",
-                            youtube_link
-                        )
+                    st.caption(
+                        f"📺 {channel}"
+                    )
 
-                    st.divider()
+                    st.link_button(
+                        "Open Shorts",
+                        youtube_link
+                    )
 
-            except Exception:
-                continue
+                st.divider()
 
-    st.balloons()
+            except:
+                pass
