@@ -41,14 +41,12 @@ Generate EXACTLY 6 Disney-specific search keywords.
 
 Rules:
 - English only
-- Focus on Disney Parks
-- Prioritize attraction names
-- Prioritize land names
-- Prioritize show names
-- Prioritize restaurant names
-- Prioritize character names
-- Prioritize Disney park locations
-- Avoid generic keywords
+- Focus on the main topic of the transcript
+- Prioritize specific names if mentioned in transcript
+- If attraction names are mentioned, use attraction names
+- If locations are mentioned, use locations
+- If restaurants are mentioned, use restaurants
+- Do NOT invent Disney attractions, lands, restaurants, or characters that are not mentioned
 - Good for finding B-roll footage
 - comma separated
 - no numbering
