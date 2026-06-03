@@ -26,7 +26,7 @@ st.title("🎬 Shorts B-Roll Finder")
 st.write("Generate keyword B-Roll otomatis dari transcript video.")
 
 transcript = st.text_area(
-    "📜 Tempel Transkrip Video",
+    "📜 Paste Video Transcript",
     height=200
 )
 
@@ -150,7 +150,7 @@ def search_youtube(keyword):
 # BUTTON
 # =====================================
 
-if st.button("🚀 Cari Video B-Roll"):
+if st.button("🚀 Search for B-Roll Video"):
 
     if not transcript.strip():
 
