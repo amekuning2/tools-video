@@ -1,92 +1,230 @@
-import streamlit as st  # type: ignore
+import streamlit as st
 import requests
+from typing import List
 
-# Set tampilan biar responsif di HP
-st.set_page_config(page_title="Disney B-Roll Generator", page_icon="🎬", layout="centered")
+# =====================================================
+# CONFIG
+# =====================================================
 
-# API Key YouTube lo yang udah aktif
-YOUTUBE_API_KEY = "AIzaSyC91IKSHYHqmuUwhJVyEr-HA9S0Shy0Vps"
+st.set_page_config(
+    page_title="Disney Shorts B-Roll Finder",
+    page_icon="🎬",
+    layout="centered"
+)
+
+OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
+YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
+
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+MODEL = "google/gemini-2.5-flash"
+
+MAX_RESULTS_PER_KEYWORD = 3
+REQUEST_TIMEOUT = 30
+
+# =====================================================
+# UI
+# =====================================================
 
 st.title("🎬 Disney Shorts B-Roll Finder")
-st.write("Versi Super Stabil - Anti Error Limit!")
+st.caption("AI-powered Disney B-Roll keyword generator")
 
-transkrip_input = st.text_area(
-    "Tempel Transkrip Video Di Sini:", 
-    value="",
-    height=150
+st.markdown(
+    """
+Paste transcript video Shorts, lalu AI akan:
+1. Generate keyword B-Roll paling relevan  
+2. Cari video YouTube Shorts terkait  
+3. Menampilkan hasil terbaik
+"""
 )
+
+transcript_input = st.text_area(
+    "📜 Tempel Transkrip Video",
+    placeholder="Paste transcript di sini...",
+    height=220
+)
+
+# =====================================================
+# FUNCTIONS
+# =====================================================
+
+def generate_keywords(transcript: str) -> List[str]:
+
+    prompt = f"""
+You are a Disney Shorts B-Roll keyword expert.
+
+Based on this transcript, generate EXACTLY 3 highly specific YouTube Shorts search keywords in English.
+
+Rules:
+- highly visual
+- cinematic b-roll friendly
+- Disney parks / attractions / ambience / food / guests / rides if relevant
+- avoid generic words
+- no explanation
+- no numbering
+- comma separated only
+
+Transcript:
+{transcript}
+"""
+
+    try:
+        response = requests.post(
+            OPENROUTER_URL,
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": MODEL,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            },
+            timeout=REQUEST_TIMEOUT
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        if "choices" not in data:
+            st.error("❌ OpenRouter response invalid")
+            with st.expander("Debug Response"):
+                st.json(data)
+            return []
+
+        ai_text = data["choices"][0]["message"]["content"]
+
+        keywords = []
+
+        for item in ai_text.split(","):
+            cleaned = item.strip()
+
+            if cleaned and cleaned not in keywords:
+                keywords.append(cleaned)
+
+        return keywords
+
+    except requests.exceptions.Timeout:
+        st.error("⌛ Request timeout ke OpenRouter")
+        return []
+
+    except Exception as e:
+        st.error(f"❌ OpenRouter Error: {str(e)}")
+        return []
+
+
+def search_youtube(keyword: str):
+
+    url = "https://www.googleapis.com/youtube/v3/search"
+
+    params = {
+        "part": "snippet",
+        "q": f"{keyword} shorts",
+        "type": "video",
+        "videoDuration": "short",
+        "maxResults": MAX_RESULTS_PER_KEYWORD,
+        "key": YOUTUBE_API_KEY
+    }
+
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            timeout=REQUEST_TIMEOUT
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        return data.get("items", [])
+
+    except Exception as e:
+        st.warning(f"⚠️ YouTube Error ({keyword})")
+        return []
+
+
+# =====================================================
+# BUTTON ACTION
+# =====================================================
 
 if st.button("🚀 Cari Video B-Roll", type="primary"):
-    with st.spinner("🧠 Meminta AI menganalisis transkrip..."):
-        # Kita pakai API publik alternatif yang super stabil buat generate keyword
-        try:
-            prompt = f"Berikan TEPAT 3 keyword pencarian video YouTube Shorts bahasa Inggris yang paling spesifik berdasarkan transkrip ini. Format wajib dipisahkan koma saja tanpa angka tanpa penjelasan. Transkrip: {transkrip_input}"
-            
-            # Nembak AI gratisan tanpa ribet API key yang sensitif
-            response = requests.post(
-    "https://openrouter.ai/api/v1/chat/completions",
-    headers={
-        "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",
-        "Content-Type": "application/json"
-    },
-    json={
-        "model": "google/gemini-2.5-flash",
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    }
-)
 
-response_json = response.json()
+    if not transcript_input.strip():
+        st.warning("⚠️ Tempel transkrip dulu.")
+        st.stop()
 
-# Debug response
-if "choices" not in response_json:
-    st.error("❌ OpenRouter Error")
-    st.json(response_json)
-    keywords = []
-else:
-    ai_text = response_json["choices"][0]["message"]["content"]
+    with st.spinner("🧠 AI sedang menganalisis transcript..."):
 
-    keywords = [
-        k.strip()
-        for k in ai_text.split(",")
-        if k.strip()
-    ]
+        keywords = generate_keywords(transcript_input)
+
+    if not keywords:
+        st.error("❌ Keyword gagal dibuat.")
+        st.stop()
 
     st.success(
-        f"✅ **AI Keyword:** {', '.join(keywords)}"
+        "✅ Keyword ditemukan:\n\n"
+        + " • ".join(keywords)
     )
-        except Exception as e:
-            st.error(f"⚠️ Respon asli dari OpenRouter: {response}")
-            keywords = []
 
-    if keywords:
-        st.subheader("🔍 Hasil B-Roll YouTube Shorts Teratas:")
-        for keyword in keywords:
-            url = "https://www.googleapis.com/youtube/v3/search"
-            params = {
-                "part": "snippet",
-                "q": keyword,
-                "type": "video",
-                "videoDuration": "short",
-                "maxResults": 1,
-                "key": YOUTUBE_API_KEY
-            }
-            res = requests.get(url, params=params).json()
+    st.divider()
+
+    st.subheader("🎥 Hasil B-Roll YouTube Shorts")
+
+    for keyword in keywords:
+
+        st.markdown(f"## 📌 {keyword}")
+
+        videos = search_youtube(keyword)
+
+        if not videos:
+            st.warning(f"Tidak ada hasil untuk: {keyword}")
+            continue
+
+        for item in videos:
+
             try:
-                video_id = res['items'][0]['id']['videoId']
-                youtube_link = f"https://www.youtube.com/shorts/{video_id}"
-                video_title = res['items'][0]['snippet']['title']
-                
+                video_id = item["id"]["videoId"]
+                snippet = item["snippet"]
+
+                title = snippet["title"]
+                channel = snippet["channelTitle"]
+                thumbnail = snippet["thumbnails"]["high"]["url"]
+
+                youtube_link = (
+                    f"https://www.youtube.com/shorts/{video_id}"
+                )
+
                 with st.container():
-                    st.markdown(f"**📌 Keyword:** *{keyword}*")
-                    st.markdown(f"🔗 **Link Shorts:** [{youtube_link}]({youtube_link})")
-                    st.caption(f"Judul: {video_title}")
+
+                    col1, col2 = st.columns([1, 2])
+
+                    with col1:
+                        st.image(
+                            thumbnail,
+                            use_container_width=True
+                        )
+
+                    with col2:
+                        st.markdown(
+                            f"### [{title}]({youtube_link})"
+                        )
+                        st.caption(
+                            f"📺 {channel}"
+                        )
+                        st.link_button(
+                            "Open Shorts",
+                            youtube_link
+                        )
+
                     st.divider()
-            except:
-                st.warning(f"❌ Skip keyword: '{keyword}'")
-                
-        st.balloons()
+
+            except Exception:
+                continue
+
+    st.balloons()
