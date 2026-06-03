@@ -26,7 +26,7 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
             response = requests.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers={
-                    "Authorization": "Bearer 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", # Ini token cadangan dari gua, Ram
+                    "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",
                     "Content-Type": "application/json"
                 },
                 json={
