@@ -12,7 +12,7 @@ st.write("Versi Super Stabil - Anti Error Limit!")
 
 transkrip_input = st.text_area(
     "Tempel Transkrip Video Di Sini:", 
-    value="Three Disneyland souvenirs you can actually customize yourself. First, if you don't want to buy the usual Mickey Mouse headband, good news, because you can actually make your own. Start by picking a headband base. Then add the plush characters you like. If you want Stitch and Donald Duck together, no one stopping you. Next, if a tiara is more of your style, well, you can do that, too. You get to choose the gems, the shapes, and where it all goes. Once it's done, you're all set to meet with the princesses. Lastly, if you bought a hat, shirt, or a bag in Disneyland, you can take it to this store and they will embroider it with your name, Mickey Mousees, or whatever you want.",
+    value="",
     height=150
 )
 
@@ -40,7 +40,7 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
             st.success(f"✅ **AI Keyword:** {', '.join(keywords)}")
         except Exception as e:
             st.error(f"AI Lagi Hang, pakai keyword cadangan otomatis.")
-            keywords = ["Disneyland custom headband", "Disneyland tiara princess", "Disneyland embroidery shop"]
+            keywords = ["Disneyland custom headband", "Disneyland embroidery shop", "Disneyland cast member"]
 
     if keywords:
         st.subheader("🔍 Hasil B-Roll YouTube Shorts Teratas:")
