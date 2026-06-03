@@ -6,7 +6,7 @@ import requests
 # =====================================
 
 st.set_page_config(
-    page_title="Disney Shorts B-Roll Finder",
+    page_title="Shorts B-Roll Finder",
     page_icon="🎬",
     layout="centered"
 )
@@ -22,7 +22,7 @@ YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 # UI
 # =====================================
 
-st.title("🎬 Disney Shorts B-Roll Finder")
+st.title("🎬 Shorts B-Roll Finder")
 st.write("Generate keyword B-Roll otomatis dari transcript video.")
 
 transcript = st.text_area(
@@ -37,17 +37,22 @@ transcript = st.text_area(
 def generate_keywords(text):
 
     prompt = f"""
-Generate EXACTLY 6 Disney-specific search keywords.
+Generate EXACTLY 6 topic-specific search keywords.
 
 Rules:
 - English only
-- Focus on the main topic of the transcript
-- Prioritize specific names if mentioned in transcript
-- If attraction names are mentioned, use attraction names
-- If locations are mentioned, use locations
-- If restaurants are mentioned, use restaurants
-- Do NOT invent Disney attractions, lands, restaurants, or characters that are not mentioned
-- Good for finding B-roll footage
+- Focus on the MAIN topic of the transcript
+- Use ONLY topics explicitly mentioned or strongly implied
+- Prioritize specific names if mentioned
+- If places are mentioned, use place names
+- If products are mentioned, use product names
+- If characters are mentioned, use character names
+- If games are mentioned, use game titles
+- If movies/shows are mentioned, use titles
+- If attractions/restaurants/locations are mentioned, use exact names
+- Do NOT invent topics, names, places, or entities not present in the transcript
+- Avoid overly generic keywords
+- Optimize for finding B-roll footage or reference videos
 - comma separated
 - no numbering
 - no explanation
