@@ -30,7 +30,7 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "meta-llama/llama-3-8b-instruct:free",
+                    "model": "google/gemini-flash-1.5-8b",
                     "messages": [{"role": "user", "content": prompt}]
                 }
             ).json()
