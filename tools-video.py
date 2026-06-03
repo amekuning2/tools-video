@@ -1,9 +1,9 @@
 import streamlit as st
 import requests
 
-# =====================================================
-# CONFIG
-# =====================================================
+# =====================================
+# PAGE CONFIG
+# =====================================
 
 st.set_page_config(
     page_title="Disney Shorts B-Roll Finder",
@@ -11,105 +11,93 @@ st.set_page_config(
     layout="centered"
 )
 
+# =====================================
+# API KEYS
+# =====================================
+
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 
-REQUEST_TIMEOUT = 30
-
-# =====================================================
+# =====================================
 # UI
-# =====================================================
+# =====================================
 
 st.title("🎬 Disney Shorts B-Roll Finder")
-st.caption("AI-powered Disney B-Roll keyword generator")
+st.write("Generate keyword B-Roll otomatis dari transcript video.")
 
-st.markdown("""
-Paste transcript video Shorts, lalu AI akan:
-
-1. Generate keyword B-Roll paling relevan
-2. Cari video YouTube Shorts terkait
-3. Menampilkan hasil terbaik
-""")
-
-transcript_input = st.text_area(
+transcript = st.text_area(
     "📜 Tempel Transkrip Video",
-    placeholder="Paste transcript di sini...",
-    height=220
+    height=200
 )
 
-# =====================================================
+# =====================================
 # GEMINI
-# =====================================================
+# =====================================
 
-def generate_keywords(transcript):
+def generate_keywords(text):
 
     prompt = f"""
-You are a Disney Shorts B-Roll expert.
-
-Generate EXACTLY 3 highly specific YouTube Shorts search keywords.
+Generate EXACTLY 3 YouTube Shorts search keywords.
 
 Rules:
 - English only
-- highly visual
-- cinematic
-- Disney park related if applicable
-- comma separated only
+- comma separated
 - no numbering
 - no explanation
 
 Transcript:
-{transcript}
+
+{text}
 """
 
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    )
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ]
+    }
+
     try:
-
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-        )
-
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": prompt
-                        }
-                    ]
-                }
-            ]
-        }
 
         response = requests.post(
             url,
             json=payload,
-            timeout=REQUEST_TIMEOUT
+            timeout=30
         )
 
         response.raise_for_status()
 
         data = response.json()
 
-        ai_text = (
-            data["candidates"][0]
-            ["content"]["parts"][0]["text"]
-        )
+        result = data["candidates"][0]["content"]["parts"][0]["text"]
 
         keywords = [
             x.strip()
-            for x in ai_text.split(",")
+            for x in result.split(",")
             if x.strip()
         ]
 
         return keywords
 
     except Exception as e:
-    st.error("Gemini API sedang sibuk atau mencapai limit.")
-    return []
 
-# =====================================================
+        st.error(f"Gemini Error: {e}")
+
+        return []
+
+# =====================================
 # YOUTUBE SEARCH
-# =====================================================
+# =====================================
 
 def search_youtube(keyword):
 
@@ -117,9 +105,8 @@ def search_youtube(keyword):
 
     params = {
         "part": "snippet",
-        "q": f"{keyword} shorts",
+        "q": keyword,
         "type": "video",
-        "videoDuration": "short",
         "maxResults": 3,
         "key": YOUTUBE_API_KEY
     }
@@ -129,93 +116,75 @@ def search_youtube(keyword):
         response = requests.get(
             url,
             params=params,
-            timeout=REQUEST_TIMEOUT
+            timeout=30
         )
 
         response.raise_for_status()
 
-        return response.json().get("items", [])
+        data = response.json()
+
+        return data.get("items", [])
 
     except Exception as e:
-        st.warning(f"YouTube Error: {e}")
+
+        st.error(f"YouTube Error: {e}")
+
         return []
 
-# =====================================================
+# =====================================
 # BUTTON
-# =====================================================
+# =====================================
 
-if st.button("🚀 Cari Video B-Roll", type="primary"):
+if st.button("🚀 Cari Video B-Roll"):
 
-    if not transcript_input.strip():
-        st.warning("Tempel transcript dulu.")
-        st.stop()
+    if not transcript.strip():
 
-    with st.spinner("🧠 AI sedang menganalisis transcript..."):
+        st.warning("Masukkan transcript terlebih dahulu.")
 
-        keywords = generate_keywords(transcript_input)
+    else:
 
-    if not keywords:
-        st.error("Keyword gagal dibuat.")
-        st.stop()
+        keywords = generate_keywords(transcript)
 
-    st.success(
-        "✅ Keyword ditemukan: "
-        + ", ".join(keywords)
-    )
+        if not keywords:
 
-    st.divider()
+            st.error("Keyword gagal dibuat.")
 
-    st.subheader("🎥 Hasil B-Roll YouTube Shorts")
+        else:
 
-    for keyword in keywords:
+            st.success(
+                "Keyword: " + ", ".join(keywords)
+            )
 
-        st.markdown(f"## 📌 {keyword}")
+            st.subheader("🎥 Hasil YouTube")
 
-        videos = search_youtube(keyword)
+            for keyword in keywords:
 
-        if not videos:
-            st.warning(f"Tidak ada hasil untuk {keyword}")
-            continue
+                st.markdown(f"### 📌 {keyword}")
 
-        for item in videos:
+                videos = search_youtube(keyword)
 
-            try:
+                if not videos:
 
-                video_id = item["id"]["videoId"]
+                    st.warning("Tidak ada hasil.")
 
-                title = item["snippet"]["title"]
+                    continue
 
-                channel = item["snippet"]["channelTitle"]
+                for item in videos:
 
-                thumbnail = item["snippet"]["thumbnails"]["high"]["url"]
+                    try:
 
-                youtube_link = (
-                    f"https://www.youtube.com/shorts/{video_id}"
-                )
+                        video_id = item["id"]["videoId"]
 
-                col1, col2 = st.columns([1, 2])
+                        title = item["snippet"]["title"]
 
-                with col1:
-                    st.image(
-                        thumbnail,
-                        use_container_width=True
-                    )
+                        link = (
+                            f"https://www.youtube.com/watch?v={video_id}"
+                        )
 
-                with col2:
-                    st.markdown(
-                        f"### [{title}]({youtube_link})"
-                    )
+                        st.markdown(
+                            f"- [{title}]({link})"
+                        )
 
-                    st.caption(
-                        f"📺 {channel}"
-                    )
+                    except:
 
-                    st.link_button(
-                        "Open Shorts",
-                        youtube_link
-                    )
-
-                st.divider()
-
-            except:
-                pass
+                        pass
