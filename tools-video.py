@@ -24,20 +24,41 @@ if st.button("🚀 Cari Video B-Roll", type="primary"):
             
             # Nembak AI gratisan tanpa ribet API key yang sensitif
             response = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "google/gemini-2.5-flash",
-                    "messages": [{"role": "user", "content": prompt}]
-                }
-            ).json()
-            
-            ai_text = response['choices'][0]['message']['content']
-            keywords = [k.strip() for k in ai_text.split(',')]
-            st.success(f"✅ **AI Keyword:** {', '.join(keywords)}")
+    "https://openrouter.ai/api/v1/chat/completions",
+    headers={
+        "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "google/gemini-2.5-flash",
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    }
+)
+
+response_json = response.json()
+
+# Debug response
+if "choices" not in response_json:
+    st.error("❌ OpenRouter Error")
+    st.json(response_json)
+    keywords = []
+else:
+    ai_text = response_json["choices"][0]["message"]["content"]
+
+    keywords = [
+        k.strip()
+        for k in ai_text.split(",")
+        if k.strip()
+    ]
+
+    st.success(
+        f"✅ **AI Keyword:** {', '.join(keywords)}"
+    )
         except Exception as e:
             st.error(f"⚠️ Respon asli dari OpenRouter: {response}")
             keywords = []
