@@ -25,10 +25,19 @@ YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 st.title("🎬 Video B-Roll Finder")
 st.write("Automatically generate B-Roll keywords from video transcripts.")
 
+if "transcript" not in st.session_state:
+    st.session_state.transcript = ""
+
 transcript = st.text_area(
     "📜 Paste Video Transcript",
-    height=200
+    value=st.session_state.transcript,
+    height=200,
+    key="transcript_box"
 )
+
+if st.button("🗑 Clear Transcript"):
+    st.session_state.transcript_box = ""
+    st.rerun()
 
 # =====================================
 # GEMINI
@@ -260,3 +269,10 @@ if st.button("🚀 Search for B-Roll Video"):
             )
 
             st.code(copy_text)
+
+            st.download_button(
+                label="💾 Download Results (.txt)",
+                data=copy_text,
+                file_name="broll_results.txt",
+                mime="text/plain"
+            )
