@@ -6,7 +6,7 @@ import requests
 # =====================================
 
 st.set_page_config(
-    page_title="Video B-Roll Finder 3.5",
+    page_title="Video B-Roll Finder Multi-Model",
     page_icon="🎬",
     layout="centered"
 )
@@ -22,7 +22,7 @@ YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 # UI
 # =====================================
 
-st.title("🎬 Video B-Roll Finder 3.5")
+st.title("🎬 Video B-Roll Finder Multi-Model")
 st.write("Automatically generate B-Roll keywords from video transcripts.")
 
 if "transcript" not in st.session_state:
@@ -34,6 +34,21 @@ transcript = st.text_area(
     height=200,
     key="transcript_box"
 )
+
+# MODEL SELECTOR
+model = st.selectbox(
+    "🤖 Gemini Model",
+    [
+        "gemini-2.5-flash",
+        "gemini-3.5-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+        "gemini-3-flash"
+    ]
+)
+
+# GEMINI
+def generate_keywords(text, model):
 
 if st.button("🗑 Clear Transcript"):
     st.session_state.transcript_box = ""
@@ -73,7 +88,7 @@ Transcript:
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-3.5-flash:generateContent?key={GEMINI_API_KEY}"
+        f"{model}:generateContent?key={GEMINI_API_KEY}"
     )
 
     payload = {
@@ -183,7 +198,8 @@ if st.button("🚀 Search for B-Roll Video"):
     else:
 
         keywords = generate_keywords(
-            transcript
+            transcript,
+            model
         )
 
         if not keywords:
