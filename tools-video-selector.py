@@ -47,9 +47,6 @@ model = st.selectbox(
     ]
 )
 
-# GEMINI
-def generate_keywords(text, model):
-
 if st.button("🗑 Clear Transcript"):
     st.session_state.transcript_box = ""
     st.rerun()
@@ -58,7 +55,7 @@ if st.button("🗑 Clear Transcript"):
 # GEMINI
 # =====================================
 
-def generate_keywords(text):
+def generate_keywords(text, model):
 
     prompt = f"""
 Generate EXACTLY 6 topic-specific search keywords.
