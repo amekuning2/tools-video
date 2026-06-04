@@ -179,7 +179,7 @@ if st.button("🚀 Search for B-Roll Video"):
             )
 
             st.subheader(
-                "🎥 Hasil YouTube"
+                "🎥 YouTube Result"
             )
 
             copy_text = (
