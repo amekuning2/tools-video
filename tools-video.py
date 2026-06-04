@@ -23,7 +23,7 @@ YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 # =====================================
 
 st.title("🎬 Shorts B-Roll Finder")
-st.write("Generate keyword B-Roll otomatis dari transcript video.")
+st.write("Automatically generate B-Roll keywords from video transcripts.")
 
 transcript = st.text_area(
     "📜 Paste Video Transcript",
