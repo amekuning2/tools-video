@@ -105,14 +105,14 @@ Transcript:
             )
             
             return []
-
-            elif response.status_code != 200:
             
-                st.error(
-                    f"Gemini API Error ({response.status_code})"
-                )
+        elif response.status_code != 200:
+            
+            st.error(
+                f"Gemini API Error ({response.status_code})"
+            )
                       
-                return []
+            return []
             
         data = response.json()
 
