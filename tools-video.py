@@ -96,11 +96,26 @@ Transcript:
             timeout=30
         )
 
-        if response.status_code != 200:
-            st.error("Gemini Raw Response:")
-            st.code(response.text)
+        if response.status_code == 429:
+            
+            st.error(
+                "🚫 Gemini API quota reached (20/20).\n"
+                "Gemini 2.5 Flash free tier only 20 requests per day.\n"
+                "Please try again tomorrow or use another API key."
+            )
+            
             return []
 
+        elif response.status_code != 200:
+
+             st.error(
+                 f"Gemini API Error ({response.status_code})"
+            )
+            
+            st.code(response.text)
+        
+            return []
+            
         data = response.json()
 
         result = data["candidates"][0]["content"]["parts"][0]["text"]
