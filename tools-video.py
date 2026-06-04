@@ -6,7 +6,7 @@ import requests
 # =====================================
 
 st.set_page_config(
-    page_title="Shorts B-Roll Finder",
+    page_title="Video B-Roll Finder",
     page_icon="🎬",
     layout="centered"
 )
@@ -22,7 +22,7 @@ YOUTUBE_API_KEY = st.secrets["YOUTUBE_API_KEY"]
 # UI
 # =====================================
 
-st.title("🎬 Shorts B-Roll Finder")
+st.title("🎬 Video B-Roll Finder")
 st.write("Automatically generate B-Roll keywords from video transcripts.")
 
 transcript = st.text_area(
